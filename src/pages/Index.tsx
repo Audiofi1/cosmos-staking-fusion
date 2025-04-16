@@ -1,4 +1,6 @@
+
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import PortfolioOverview from '../components/PortfolioOverview';
 import StakingPools from '../components/StakingPools';
@@ -7,6 +9,8 @@ import RewardsTracker from '../components/RewardsTracker';
 import WalletConnectModal from '../components/WalletConnectModal';
 import StakingModal from '../components/StakingModal';
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 
 const Index = () => {
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
@@ -45,6 +49,15 @@ const Index = () => {
       <Navbar openWalletModal={openWalletModal} />
       
       <main className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <Link to="/stake">
+            <Button className="cosmic-button">
+              Go to Staking <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+        
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <div className="grid grid-cols-1 gap-6">
