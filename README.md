@@ -1,4 +1,4 @@
-# Welcome to your Lovable project
+# Welcome to your crossflip
 
 ## Project info
 
@@ -8,9 +8,8 @@
 
 There are several ways of editing your application.
 
-**Use Lovable**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/83e91ff0-cc96-4ac3-a5c0-1e605826983b) and start prompting.
+ (https://lovable.dev/projects/83e91ff0-cc96-4ac3-a5c0-1e605826983b) and start prompting.
 
 Changes made via Lovable will be committed automatically to this repo.
 
