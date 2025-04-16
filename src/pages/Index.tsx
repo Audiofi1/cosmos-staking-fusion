@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
 import PortfolioOverview from '../components/PortfolioOverview';
@@ -7,7 +6,7 @@ import NetworksOverview from '../components/NetworksOverview';
 import RewardsTracker from '../components/RewardsTracker';
 import WalletConnectModal from '../components/WalletConnectModal';
 import StakingModal from '../components/StakingModal';
-import { useToast } from "@/components/ui/toast";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
