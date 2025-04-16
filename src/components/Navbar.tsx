@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { ChevronDown, Menu, X, Wallet, Bell, Settings } from "lucide-react";
 import { 
@@ -13,9 +14,14 @@ import {
 
 const Navbar = ({ openWalletModal }: { openWalletModal: () => void }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const isActive = (path: string) => {
+    return location.pathname === path;
   };
 
   return (
@@ -25,16 +31,60 @@ const Navbar = ({ openWalletModal }: { openWalletModal: () => void }) => {
           <div className="flex items-center">
             <div className="flex-shrink-0 flex items-center">
               <div className="w-8 h-8 rounded-full bg-button-gradient flex items-center justify-center mr-2">
-                <span className="text-white font-bold text-lg">CF</span>
+                <span className="text-white font-bold text-lg">OP</span>
               </div>
-              <span className="text-white font-bold text-xl">CrossFlip</span>
+              <span className="text-white font-bold text-xl">Omnia Protocol</span>
             </div>
             <div className="hidden md:block ml-10">
               <div className="flex items-center space-x-4">
-                <a href="#" className="text-white hover:text-opacity-80 px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
-                <a href="#" className="text-white/70 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Stake</a>
-                <a href="#" className="text-white/70 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Pools</a>
-                <a href="#" className="text-white/70 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Rewards</a>
+                <Link 
+                  to="/" 
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${
+                    isActive('/') ? 'text-white' : 'text-white/70 hover:text-white'
+                  }`}
+                >
+                  Dashboard
+                </Link>
+                <Link 
+                  to="/swap" 
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${
+                    isActive('/swap') ? 'text-white' : 'text-white/70 hover:text-white'
+                  }`}
+                >
+                  Swap
+                </Link>
+                <Link 
+                  to="/bridge" 
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${
+                    isActive('/bridge') ? 'text-white' : 'text-white/70 hover:text-white'
+                  }`}
+                >
+                  Bridge
+                </Link>
+                <Link 
+                  to="/pools" 
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${
+                    isActive('/pools') ? 'text-white' : 'text-white/70 hover:text-white'
+                  }`}
+                >
+                  Pools
+                </Link>
+                <Link 
+                  to="/stake" 
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${
+                    isActive('/stake') ? 'text-white' : 'text-white/70 hover:text-white'
+                  }`}
+                >
+                  Stake
+                </Link>
+                <Link 
+                  to="/rewards" 
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${
+                    isActive('/rewards') ? 'text-white' : 'text-white/70 hover:text-white'
+                  }`}
+                >
+                  Rewards
+                </Link>
                 
                 <DropdownMenu>
                   <DropdownMenuTrigger className="text-white/70 hover:text-white px-3 py-2 rounded-md text-sm font-medium inline-flex items-center">
@@ -43,8 +93,8 @@ const Navbar = ({ openWalletModal }: { openWalletModal: () => void }) => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="bg-card border-white/10 text-foreground">
                     <DropdownMenuItem className="cursor-pointer hover:bg-white/10">Analytics</DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer hover:bg-white/10">Bridge</DropdownMenuItem>
                     <DropdownMenuItem className="cursor-pointer hover:bg-white/10">Documentation</DropdownMenuItem>
+                    <DropdownMenuItem className="cursor-pointer hover:bg-white/10">Governance</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -90,13 +140,27 @@ const Navbar = ({ openWalletModal }: { openWalletModal: () => void }) => {
       {isMobileMenuOpen && (
         <div className="md:hidden bg-card py-2 px-4">
           <div className="flex flex-col space-y-1">
-            <a href="#" className="text-white hover:text-opacity-80 px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
-            <a href="#" className="text-white/70 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Stake</a>
-            <a href="#" className="text-white/70 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Pools</a>
-            <a href="#" className="text-white/70 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Rewards</a>
+            <Link to="/" className={`px-3 py-2 rounded-md text-sm font-medium ${isActive('/') ? 'text-white' : 'text-white/70'}`}>
+              Dashboard
+            </Link>
+            <Link to="/swap" className={`px-3 py-2 rounded-md text-sm font-medium ${isActive('/swap') ? 'text-white' : 'text-white/70'}`}>
+              Swap
+            </Link>
+            <Link to="/bridge" className={`px-3 py-2 rounded-md text-sm font-medium ${isActive('/bridge') ? 'text-white' : 'text-white/70'}`}>
+              Bridge
+            </Link>
+            <Link to="/pools" className={`px-3 py-2 rounded-md text-sm font-medium ${isActive('/pools') ? 'text-white' : 'text-white/70'}`}>
+              Pools
+            </Link>
+            <Link to="/stake" className={`px-3 py-2 rounded-md text-sm font-medium ${isActive('/stake') ? 'text-white' : 'text-white/70'}`}>
+              Stake
+            </Link>
+            <Link to="/rewards" className={`px-3 py-2 rounded-md text-sm font-medium ${isActive('/rewards') ? 'text-white' : 'text-white/70'}`}>
+              Rewards
+            </Link>
             <a href="#" className="text-white/70 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Analytics</a>
-            <a href="#" className="text-white/70 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Bridge</a>
             <a href="#" className="text-white/70 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Documentation</a>
+            <a href="#" className="text-white/70 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Governance</a>
           </div>
         </div>
       )}

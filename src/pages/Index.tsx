@@ -51,11 +51,18 @@ const Index = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Dashboard</h1>
-          <Link to="/stake">
-            <Button className="cosmic-button">
-              Go to Staking <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </Link>
+          <div className="flex space-x-3">
+            <Link to="/swap">
+              <Button className="cosmic-button">
+                Swap Tokens <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+            <Link to="/stake">
+              <Button className="cosmic-button">
+                Stake <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
