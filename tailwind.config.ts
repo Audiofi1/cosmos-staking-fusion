@@ -127,6 +127,22 @@ export default {
         'pulse-fade': {
           '0%, 100%': { opacity: '0.6' },
           '50%': { opacity: '1' }
+        },
+        'fade-in': {
+          '0%': { opacity: '0', transform: 'translateY(5px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' }
+        },
+        'fade-out': {
+          '0%': { opacity: '1', transform: 'translateY(0)' },
+          '100%': { opacity: '0', transform: 'translateY(5px)' }
+        },
+        'scale-in': {
+          '0%': { transform: 'scale(0.95)', opacity: '0' },
+          '100%': { transform: 'scale(1)', opacity: '1' }
+        },
+        'scale-out': {
+          '0%': { transform: 'scale(1)', opacity: '1' },
+          '100%': { transform: 'scale(0.95)', opacity: '0' }
         }
 			},
 			animation: {
@@ -135,7 +151,11 @@ export default {
         'float': 'float 6s ease-in-out infinite',
         'pulse-glow': 'pulse-glow 4s ease-in-out infinite',
         'rotate-orbit': 'rotate-orbit 20s linear infinite',
-        'pulse-fade': 'pulse-fade 3s ease-in-out infinite'
+        'pulse-fade': 'pulse-fade 3s ease-in-out infinite',
+        'fade-in': 'fade-in 0.3s ease-out',
+        'fade-out': 'fade-out 0.3s ease-out',
+        'scale-in': 'scale-in 0.2s ease-out',
+        'scale-out': 'scale-out 0.2s ease-out'
 			},
       backgroundImage: {
         'cosmic-gradient': 'linear-gradient(135deg, #0F0B2F 0%, #1A1B3F 25%, #20153D 50%, #241045 75%, #281254 100%)',

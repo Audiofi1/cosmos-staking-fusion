@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Progress } from "@/components/ui/progress"; 
+import { Progress } from "@/components/ui/progress";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { 
   ChevronUp, 
   ChevronDown, 
@@ -14,7 +15,8 @@ import {
   Percent, 
   TrendingUp, 
   TrendingDown,
-  Plus
+  Plus,
+  Filter
 } from "lucide-react";
 import {
   Tooltip,
@@ -23,6 +25,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import StakingModal from '../components/StakingModal';
+import WalletConnectModal from '../components/WalletConnectModal';
 
 // Simulated pool data
 const poolsData = [
@@ -108,7 +111,25 @@ const Pools = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isStakingModalOpen, setIsStakingModalOpen] = useState(false);
   const [selectedPoolId, setSelectedPoolId] = useState<string | null>(null);
+  const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
+
+  const openWalletModal = () => {
+    setIsWalletModalOpen(true);
+  };
+
+  const closeWalletModal = () => {
+    setIsWalletModalOpen(false);
+  };
+
+  const handleWalletConnect = (walletId: string) => {
+    toast({
+      title: "Wallet connected",
+      description: `${walletId.charAt(0).toUpperCase() + walletId.slice(1)} wallet connected successfully.`,
+    });
+    closeWalletModal();
+  };
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -179,9 +200,86 @@ const Pools = () => {
     }
   };
 
+  // Card-style rendering for mobile
+  const PoolCard = ({ pool }: { pool: typeof poolsData[0] }) => (
+    <Card className="glass-card mb-4 hover:bg-white/5 transition-colors">
+      <CardContent className="pt-4">
+        <div className="flex justify-between items-start mb-3">
+          <div className="flex items-center space-x-2">
+            <div className="flex -space-x-2">
+              <div className={`network-icon network-${pool.network}`}>{pool.token1.charAt(0)}</div>
+              <div className={`network-icon network-${pool.network}`}>{pool.token2.charAt(0)}</div>
+            </div>
+            <span className="font-medium">{pool.name}</span>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8" 
+            onClick={() => toggleFavorite(pool.id)}
+          >
+            <Star 
+              className={`h-4 w-4 ${favorites.includes(pool.id) ? 'text-crossflip-yellow fill-crossflip-yellow' : ''}`} 
+            />
+          </Button>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <p className="text-sm text-muted-foreground">Liquidity</p>
+            <p className="font-medium">{formatCurrency(pool.liquidity)}</p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Market Cap</p>
+            <p className="font-medium">{formatCurrency(pool.marketCap)}</p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Volume (24h)</p>
+            <p className="font-medium">{formatCurrency(pool.volume24h)}</p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Change (24h)</p>
+            <p className={`font-medium flex items-center ${pool.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+              {pool.change24h >= 0 ? <TrendingUp className="mr-1 h-4 w-4" /> : <TrendingDown className="mr-1 h-4 w-4" />}
+              {Math.abs(pool.change24h)}%
+            </p>
+          </div>
+        </div>
+        
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center space-x-1">
+              <span className="text-primary-foreground font-medium">{pool.apr}% APR</span>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">Annual Percentage Rate based on current pool activity</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </div>
+          <Progress value={pool.apr * 5} className="h-1" />
+        </div>
+        
+        <Button 
+          size="sm" 
+          className="cosmic-button w-full transition-all duration-300"
+          onClick={() => openStakeModal(pool.id)}
+        >
+          <Plus className="h-4 w-4 mr-1" />
+          Stake
+        </Button>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className="min-h-screen">
-      <Navbar />
+      <Navbar openWalletModal={openWalletModal} />
       
       <main className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
@@ -195,20 +293,21 @@ const Pools = () => {
                 <CardTitle>Cosmos IBC Pools</CardTitle>
                 <CardDescription>View and stake in liquidity pools</CardDescription>
               </div>
-              <div className="flex space-x-2">
-                <div className="relative">
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full md:w-auto">
+                <div className="relative w-full sm:w-64">
                   <input
                     type="text"
                     placeholder="Search pools..."
-                    className="w-full md:w-64 h-10 pl-3 pr-10 rounded-md bg-card/50 border border-white/10 text-white"
+                    className="w-full h-10 pl-3 pr-10 rounded-md bg-card/50 border border-white/10 text-white"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    aria-label="Search pools"
                   />
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
-                  className={`border-white/20 ${showFavoritesOnly ? 'bg-white/10' : ''}`}
+                  className={`border-white/20 ${showFavoritesOnly ? 'bg-white/10' : ''} w-full sm:w-auto`}
                   onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
                 >
                   <Star className={`h-4 w-4 mr-1 ${showFavoritesOnly ? 'text-crossflip-yellow fill-crossflip-yellow' : ''}`} />
@@ -218,116 +317,131 @@ const Pools = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="w-10"></TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => handleSort('name')}>
-                      Pool {sortField === 'name' && (
-                        sortDirection === 'asc' ? <ChevronUp className="inline h-4 w-4" /> : <ChevronDown className="inline h-4 w-4" />
-                      )}
-                    </TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => handleSort('liquidity')}>
-                      Liquidity {sortField === 'liquidity' && (
-                        sortDirection === 'asc' ? <ChevronUp className="inline h-4 w-4" /> : <ChevronDown className="inline h-4 w-4" />
-                      )}
-                    </TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => handleSort('marketCap')}>
-                      Market Cap {sortField === 'marketCap' && (
-                        sortDirection === 'asc' ? <ChevronUp className="inline h-4 w-4" /> : <ChevronDown className="inline h-4 w-4" />
-                      )}
-                    </TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => handleSort('volume24h')}>
-                      Volume (24h) {sortField === 'volume24h' && (
-                        sortDirection === 'asc' ? <ChevronUp className="inline h-4 w-4" /> : <ChevronDown className="inline h-4 w-4" />
-                      )}
-                    </TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => handleSort('change24h')}>
-                      Change (24h) {sortField === 'change24h' && (
-                        sortDirection === 'asc' ? <ChevronUp className="inline h-4 w-4" /> : <ChevronDown className="inline h-4 w-4" />
-                      )}
-                    </TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => handleSort('apr')}>
-                      APR {sortField === 'apr' && (
-                        sortDirection === 'asc' ? <ChevronUp className="inline h-4 w-4" /> : <ChevronDown className="inline h-4 w-4" />
-                      )}
-                    </TableHead>
-                    <TableHead className="text-right">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredPools.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center py-6">
-                        No pools match your criteria
-                      </TableCell>
+            {isMobile ? (
+              <div className="space-y-2">
+                {filteredPools.length === 0 ? (
+                  <div className="text-center py-6">
+                    No pools match your criteria
+                  </div>
+                ) : (
+                  filteredPools.map(pool => (
+                    <PoolCard key={pool.id} pool={pool} />
+                  ))
+                )}
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="w-10"></TableHead>
+                      <TableHead className="cursor-pointer" onClick={() => handleSort('name')}>
+                        Pool {sortField === 'name' && (
+                          sortDirection === 'asc' ? <ChevronUp className="inline h-4 w-4" /> : <ChevronDown className="inline h-4 w-4" />
+                        )}
+                      </TableHead>
+                      <TableHead className="cursor-pointer" onClick={() => handleSort('liquidity')}>
+                        Liquidity {sortField === 'liquidity' && (
+                          sortDirection === 'asc' ? <ChevronUp className="inline h-4 w-4" /> : <ChevronDown className="inline h-4 w-4" />
+                        )}
+                      </TableHead>
+                      <TableHead className="cursor-pointer" onClick={() => handleSort('marketCap')}>
+                        Market Cap {sortField === 'marketCap' && (
+                          sortDirection === 'asc' ? <ChevronUp className="inline h-4 w-4" /> : <ChevronDown className="inline h-4 w-4" />
+                        )}
+                      </TableHead>
+                      <TableHead className="cursor-pointer" onClick={() => handleSort('volume24h')}>
+                        Volume (24h) {sortField === 'volume24h' && (
+                          sortDirection === 'asc' ? <ChevronUp className="inline h-4 w-4" /> : <ChevronDown className="inline h-4 w-4" />
+                        )}
+                      </TableHead>
+                      <TableHead className="cursor-pointer" onClick={() => handleSort('change24h')}>
+                        Change (24h) {sortField === 'change24h' && (
+                          sortDirection === 'asc' ? <ChevronUp className="inline h-4 w-4" /> : <ChevronDown className="inline h-4 w-4" />
+                        )}
+                      </TableHead>
+                      <TableHead className="cursor-pointer" onClick={() => handleSort('apr')}>
+                        APR {sortField === 'apr' && (
+                          sortDirection === 'asc' ? <ChevronUp className="inline h-4 w-4" /> : <ChevronDown className="inline h-4 w-4" />
+                        )}
+                      </TableHead>
+                      <TableHead className="text-right">Action</TableHead>
                     </TableRow>
-                  ) : (
-                    filteredPools.map(pool => (
-                      <TableRow key={pool.id} className="hover:bg-white/5">
-                        <TableCell>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8" 
-                            onClick={() => toggleFavorite(pool.id)}
-                          >
-                            <Star 
-                              className={`h-4 w-4 ${favorites.includes(pool.id) ? 'text-crossflip-yellow fill-crossflip-yellow' : ''}`} 
-                            />
-                          </Button>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <div className="flex -space-x-2">
-                              <div className={`network-icon network-${pool.network}`}>{pool.token1.charAt(0)}</div>
-                              <div className={`network-icon network-${pool.network}`}>{pool.token2.charAt(0)}</div>
-                            </div>
-                            <span className="font-medium">{pool.name}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{formatCurrency(pool.liquidity)}</TableCell>
-                        <TableCell>{formatCurrency(pool.marketCap)}</TableCell>
-                        <TableCell>{formatCurrency(pool.volume24h)}</TableCell>
-                        <TableCell>
-                          <span className={`flex items-center ${pool.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            {pool.change24h >= 0 ? <TrendingUp className="mr-1 h-4 w-4" /> : <TrendingDown className="mr-1 h-4 w-4" />}
-                            {Math.abs(pool.change24h)}%
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-1">
-                            <span className="text-primary-foreground font-medium">{pool.apr}%</span>
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p className="text-xs">Annual Percentage Rate based on current pool activity</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </div>
-                          <Progress value={pool.apr * 5} className="h-1 mt-1" />
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button 
-                            size="sm" 
-                            className="cosmic-button"
-                            onClick={() => openStakeModal(pool.id)}
-                          >
-                            <Plus className="h-4 w-4 mr-1" />
-                            Stake
-                          </Button>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredPools.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center py-6">
+                          No pools match your criteria
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+                    ) : (
+                      filteredPools.map(pool => (
+                        <TableRow key={pool.id} className="hover:bg-white/5 transition-colors">
+                          <TableCell>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8" 
+                              onClick={() => toggleFavorite(pool.id)}
+                              aria-label={favorites.includes(pool.id) ? "Remove from favorites" : "Add to favorites"}
+                            >
+                              <Star 
+                                className={`h-4 w-4 ${favorites.includes(pool.id) ? 'text-crossflip-yellow fill-crossflip-yellow' : ''}`} 
+                              />
+                            </Button>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              <div className="flex -space-x-2">
+                                <div className={`network-icon network-${pool.network}`}>{pool.token1.charAt(0)}</div>
+                                <div className={`network-icon network-${pool.network}`}>{pool.token2.charAt(0)}</div>
+                              </div>
+                              <span className="font-medium">{pool.name}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>{formatCurrency(pool.liquidity)}</TableCell>
+                          <TableCell>{formatCurrency(pool.marketCap)}</TableCell>
+                          <TableCell>{formatCurrency(pool.volume24h)}</TableCell>
+                          <TableCell>
+                            <span className={`flex items-center ${pool.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                              {pool.change24h >= 0 ? <TrendingUp className="mr-1 h-4 w-4" /> : <TrendingDown className="mr-1 h-4 w-4" />}
+                              {Math.abs(pool.change24h)}%
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-1">
+                              <span className="text-primary-foreground font-medium">{pool.apr}%</span>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p className="text-xs">Annual Percentage Rate based on current pool activity</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
+                            <Progress value={pool.apr * 5} className="h-1 mt-1" />
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button 
+                              size="sm" 
+                              className="cosmic-button transition-all duration-300"
+                              onClick={() => openStakeModal(pool.id)}
+                            >
+                              <Plus className="h-4 w-4 mr-1" />
+                              Stake
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </CardContent>
         </Card>
       </main>
@@ -343,6 +457,13 @@ const Pools = () => {
         isOpen={isStakingModalOpen}
         onClose={closeStakeModal}
         poolId={selectedPoolId}
+      />
+
+      {/* Wallet Connect Modal */}
+      <WalletConnectModal 
+        isOpen={isWalletModalOpen}
+        onClose={closeWalletModal}
+        onConnect={handleWalletConnect}
       />
     </div>
   );

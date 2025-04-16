@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +13,8 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { ArrowDown, ArrowRight, ExternalLink, RefreshCw } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import WalletConnectModal from '../components/WalletConnectModal';
 
 const Bridge = () => {
   const [fromChain, setFromChain] = useState('cosmos');
@@ -22,11 +23,29 @@ const Bridge = () => {
   const [toToken, setToToken] = useState('ETH');
   const [amount, setAmount] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const cosmosTokens = ['ATOM', 'OSMO', 'JUNO', 'KAVA', 'SCRT'];
   const ethereumTokens = ['ETH', 'USDT', 'USDC', 'DAI'];
   const bnbTokens = ['BNB', 'BUSD', 'CAKE'];
+
+  const openWalletModal = () => {
+    setIsWalletModalOpen(true);
+  };
+
+  const closeWalletModal = () => {
+    setIsWalletModalOpen(false);
+  };
+
+  const handleWalletConnect = (walletId: string) => {
+    toast({
+      title: "Wallet connected",
+      description: `${walletId.charAt(0).toUpperCase() + walletId.slice(1)} wallet connected successfully.`,
+    });
+    closeWalletModal();
+  };
 
   const getTokensForChain = (chain: string) => {
     switch (chain) {
@@ -99,7 +118,7 @@ const Bridge = () => {
 
   return (
     <div className="min-h-screen">
-      <Navbar />
+      <Navbar openWalletModal={openWalletModal} />
       
       <main className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
@@ -117,9 +136,9 @@ const Bridge = () => {
                 {/* From Chain and Token Selection */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">From</label>
-                  <div className="flex gap-4">
+                  <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'gap-4'}`}>
                     <Select value={fromChain} onValueChange={handleFromChainChange}>
-                      <SelectTrigger className="w-1/3 bg-card/70">
+                      <SelectTrigger className={`${isMobile ? 'w-full' : 'w-1/3'} bg-card/70`}>
                         <SelectValue placeholder="Chain" />
                       </SelectTrigger>
                       <SelectContent>
@@ -130,7 +149,7 @@ const Bridge = () => {
                     </Select>
                     
                     <Select value={fromToken} onValueChange={setFromToken}>
-                      <SelectTrigger className="w-2/3 bg-card/70">
+                      <SelectTrigger className={`${isMobile ? 'w-full' : 'w-2/3'} bg-card/70`}>
                         <SelectValue placeholder="Token" />
                       </SelectTrigger>
                       <SelectContent>
@@ -157,6 +176,8 @@ const Bridge = () => {
                       className="bg-card/70"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
+                      min="0"
+                      step="0.01"
                     />
                     <Button 
                       variant="ghost" 
@@ -174,8 +195,9 @@ const Bridge = () => {
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="rounded-full bg-muted"
+                    className="rounded-full bg-muted hover:bg-muted/70 transition-colors"
                     onClick={handleSwapChains}
+                    aria-label="Swap chains"
                   >
                     <ArrowDown className="h-5 w-5" />
                   </Button>
@@ -184,9 +206,9 @@ const Bridge = () => {
                 {/* To Chain and Token Selection */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">To</label>
-                  <div className="flex gap-4">
+                  <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'gap-4'}`}>
                     <Select value={toChain} onValueChange={handleToChainChange}>
-                      <SelectTrigger className="w-1/3 bg-card/70">
+                      <SelectTrigger className={`${isMobile ? 'w-full' : 'w-1/3'} bg-card/70`}>
                         <SelectValue placeholder="Chain" />
                       </SelectTrigger>
                       <SelectContent>
@@ -196,7 +218,7 @@ const Bridge = () => {
                     </Select>
                     
                     <Select value={toToken} onValueChange={setToToken}>
-                      <SelectTrigger className="w-2/3 bg-card/70">
+                      <SelectTrigger className={`${isMobile ? 'w-full' : 'w-2/3'} bg-card/70`}>
                         <SelectValue placeholder="Token" />
                       </SelectTrigger>
                       <SelectContent>
@@ -232,7 +254,7 @@ const Bridge = () => {
             </CardContent>
             <CardFooter>
               <Button 
-                className="cosmic-button w-full"
+                className="cosmic-button w-full transition-all duration-300"
                 disabled={isLoading || !amount || parseFloat(amount) <= 0}
                 onClick={handleBridge}
               >
@@ -256,6 +278,13 @@ const Bridge = () => {
         <div className="absolute top-[20%] left-[10%] w-48 h-48 bg-glow-purple opacity-30 rounded-full filter blur-3xl fade-pulse"></div>
         <div className="absolute top-[40%] right-[15%] w-64 h-64 bg-glow-blue opacity-20 rounded-full filter blur-3xl fade-pulse"></div>
       </div>
+
+      {/* Wallet Connect Modal */}
+      <WalletConnectModal 
+        isOpen={isWalletModalOpen}
+        onClose={closeWalletModal}
+        onConnect={handleWalletConnect}
+      />
     </div>
   );
 };

@@ -11,12 +11,14 @@ import StakingModal from '../components/StakingModal';
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Index = () => {
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
   const [isStakingModalOpen, setIsStakingModalOpen] = useState(false);
   const [selectedPoolId, setSelectedPoolId] = useState<string | null>(null);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const openWalletModal = () => {
     setIsWalletModalOpen(true);
@@ -49,16 +51,16 @@ const Index = () => {
       <Navbar openWalletModal={openWalletModal} />
       
       <main className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 sm:gap-0">
           <h1 className="text-3xl font-bold">Dashboard</h1>
-          <div className="flex space-x-3">
-            <Link to="/swap">
-              <Button className="cosmic-button">
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
+            <Link to="/swap" className="w-full sm:w-auto">
+              <Button className="cosmic-button w-full transition-all duration-300">
                 Swap Tokens <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
-            <Link to="/stake">
-              <Button className="cosmic-button">
+            <Link to="/stake" className="w-full sm:w-auto">
+              <Button className="cosmic-button w-full transition-all duration-300">
                 Stake <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
