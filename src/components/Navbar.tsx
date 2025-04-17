@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { ChevronDown, Menu, X, Wallet, Bell, Settings } from "lucide-react";
+import { ChevronDown, Menu, X, Wallet, Bell, Settings, LogOut } from "lucide-react";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useWallet } from "@/contexts/WalletContext";
 
 type NavbarProps = {
   openWalletModal: () => void;
@@ -21,6 +22,7 @@ const Navbar = ({ openWalletModal }: NavbarProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const isMobile = useIsMobile();
+  const { wallet, disconnectWallet } = useWallet();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -34,6 +36,11 @@ const Navbar = ({ openWalletModal }: NavbarProps) => {
     if (isMobileMenuOpen) {
       setIsMobileMenuOpen(false);
     }
+  };
+
+  const shortenAddress = (address: string) => {
+    if (!address) return '';
+    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   };
 
   return (
@@ -123,13 +130,51 @@ const Navbar = ({ openWalletModal }: NavbarProps) => {
               <Button variant="ghost" size="icon" className="text-white/70 hover:text-white transition-colors">
                 <Settings size={20} />
               </Button>
-              <Button 
-                className="cosmic-button px-4 py-2 text-white transition-all duration-300" 
-                onClick={openWalletModal}
-              >
-                <Wallet className="mr-2 h-4 w-4" />
-                Connect Wallet
-              </Button>
+              
+              {wallet ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button className="cosmic-button px-4 py-2 text-white transition-all duration-300">
+                      <span className="flex items-center">
+                        <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                        {shortenAddress(wallet.address)}
+                      </span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-card border-white/10 text-foreground w-60">
+                    <DropdownMenuLabel>
+                      <div className="flex flex-col">
+                        <span className="font-normal text-xs text-muted-foreground">Connected with {wallet.walletType}</span>
+                        <span className="font-medium break-all">{shortenAddress(wallet.address)}</span>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-white/10" />
+                    <DropdownMenuItem className="cursor-pointer hover:bg-white/10" onClick={() => {
+                      navigator.clipboard.writeText(wallet.address);
+                    }}>
+                      Copy Address
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="cursor-pointer hover:bg-white/10">
+                      View on Explorer
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-white/10" />
+                    <DropdownMenuItem 
+                      className="cursor-pointer hover:bg-destructive/20 text-destructive" 
+                      onClick={disconnectWallet}
+                    >
+                      <LogOut className="h-4 w-4 mr-2" /> Disconnect
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button 
+                  className="cosmic-button px-4 py-2 text-white transition-all duration-300" 
+                  onClick={openWalletModal}
+                >
+                  <Wallet className="mr-2 h-4 w-4" />
+                  Connect Wallet
+                </Button>
+              )}
             </div>
           </div>
 
@@ -142,13 +187,51 @@ const Navbar = ({ openWalletModal }: NavbarProps) => {
             >
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </Button>
-            <Button 
-              className="cosmic-button ml-4 px-3 py-1.5 text-white transition-all duration-300" 
-              onClick={openWalletModal}
-              aria-label="Connect wallet"
-            >
-              <Wallet className="h-4 w-4" />
-            </Button>
+            
+            {wallet ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button className="cosmic-button ml-4 px-3 py-1.5 text-white transition-all duration-300">
+                    <span className="flex items-center">
+                      <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                      {shortenAddress(wallet.address)}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-card border-white/10 text-foreground w-60">
+                  <DropdownMenuLabel>
+                    <div className="flex flex-col">
+                      <span className="font-normal text-xs text-muted-foreground">Connected with {wallet.walletType}</span>
+                      <span className="font-medium break-all">{shortenAddress(wallet.address)}</span>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-white/10" />
+                  <DropdownMenuItem className="cursor-pointer hover:bg-white/10" onClick={() => {
+                    navigator.clipboard.writeText(wallet.address);
+                  }}>
+                    Copy Address
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer hover:bg-white/10">
+                    View on Explorer
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-white/10" />
+                  <DropdownMenuItem 
+                    className="cursor-pointer hover:bg-destructive/20 text-destructive" 
+                    onClick={disconnectWallet}
+                  >
+                    <LogOut className="h-4 w-4 mr-2" /> Disconnect
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button 
+                className="cosmic-button ml-4 px-3 py-1.5 text-white transition-all duration-300" 
+                onClick={openWalletModal}
+                aria-label="Connect wallet"
+              >
+                <Wallet className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
       </div>

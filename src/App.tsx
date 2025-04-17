@@ -11,25 +11,28 @@ import Pools from "./pages/Pools";
 import Rewards from "./pages/Rewards";
 import Swap from "./pages/Swap";
 import NotFound from "./pages/NotFound";
+import { WalletProvider } from "./contexts/WalletContext";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/stake" element={<StakePage />} />
-          <Route path="/bridge" element={<Bridge />} />
-          <Route path="/pools" element={<Pools />} />
-          <Route path="/rewards" element={<Rewards />} />
-          <Route path="/swap" element={<Swap />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <Toaster />
-        <Sonner />
-      </BrowserRouter>
+      <WalletProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/stake" element={<StakePage />} />
+            <Route path="/bridge" element={<Bridge />} />
+            <Route path="/pools" element={<Pools />} />
+            <Route path="/rewards" element={<Rewards />} />
+            <Route path="/swap" element={<Swap />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <Toaster />
+          <Sonner />
+        </BrowserRouter>
+      </WalletProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
