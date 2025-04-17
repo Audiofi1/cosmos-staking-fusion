@@ -1,18 +1,22 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
+import WalletConnectModal from "@/components/WalletConnectModal";
+import { useWallet } from "@/contexts/WalletContext";
 import { 
   ArrowUpRight, 
-  ArrowRight, 
+  ArrowRight,
+  ArrowRightLeft,
   ExternalLink, 
   Info, 
   Wallet, 
@@ -21,12 +25,15 @@ import {
   Timer,
   Coins,
   BadgePercent,
-  CornerDownRight
+  CornerDownRight,
+  AlertTriangle
 } from "lucide-react";
 
 const StakePage = () => {
-  const [isWalletConnected, setIsWalletConnected] = useState(false);
+  const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("stake");
   const { toast } = useToast();
+  const { wallet, connectKeplr } = useWallet();
   
   const cosmosTokens = [
     { id: "atom", name: "ATOM", icon: "⚛️", apy: "14.2%", network: "Cosmos Hub" },
@@ -58,7 +65,7 @@ const StakePage = () => {
     { id: "fantom", name: "Fantom", icon: "👻" }
   ];
 
-  const formSchema = z.object({
+  const stakeFormSchema = z.object({
     token: z.string().min(1, "Please select a token"),
     amount: z.string().min(1, "Please enter an amount"),
     destination: z.string().min(1, "Please select a destination"),
@@ -66,8 +73,16 @@ const StakePage = () => {
     isAutoCompound: z.boolean().default(true),
   });
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const transferFormSchema = z.object({
+    sourceChain: z.string().min(1, "Please select a source chain"),
+    sourceToken: z.string().min(1, "Please select a token"),
+    destinationChain: z.string().min(1, "Please select a destination chain"),
+    amount: z.string().min(1, "Please enter an amount"),
+    recipientAddress: z.string().min(1, "Please enter a recipient address"),
+  });
+
+  const stakeForm = useForm<z.infer<typeof stakeFormSchema>>({
+    resolver: zodResolver(stakeFormSchema),
     defaultValues: {
       token: "",
       amount: "",
@@ -77,13 +92,35 @@ const StakePage = () => {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    if (!isWalletConnected) {
-      toast({
-        title: "Wallet not connected",
-        description: "Please connect your wallet to stake tokens",
-        variant: "destructive",
-      });
+  const transferForm = useForm<z.infer<typeof transferFormSchema>>({
+    resolver: zodResolver(transferFormSchema),
+    defaultValues: {
+      sourceChain: "cosmos",
+      sourceToken: "",
+      destinationChain: "",
+      amount: "",
+      recipientAddress: "",
+    },
+  });
+
+  useEffect(() => {
+    // If a source chain is selected, filter available tokens
+    if (transferForm.watch("sourceChain")) {
+      // In a real app, you would fetch tokens available on that chain
+      // For now, we pre-populate with a default token based on the chain
+      const chainTokens = cosmosTokens.filter(token => 
+        token.network.toLowerCase().includes(transferForm.watch("sourceChain"))
+      );
+      
+      if (chainTokens.length > 0 && !transferForm.watch("sourceToken")) {
+        transferForm.setValue("sourceToken", chainTokens[0].id);
+      }
+    }
+  }, [transferForm.watch("sourceChain")]);
+
+  const onSubmitStake = (values: z.infer<typeof stakeFormSchema>) => {
+    if (!wallet) {
+      setIsWalletModalOpen(true);
       return;
     }
 
@@ -96,17 +133,35 @@ const StakePage = () => {
     console.log("Staking values:", values);
   };
 
-  const connectWallet = () => {
-    // Simulate wallet connection
-    setIsWalletConnected(true);
+  const onSubmitTransfer = (values: z.infer<typeof transferFormSchema>) => {
+    if (!wallet) {
+      setIsWalletModalOpen(true);
+      return;
+    }
+
+    // In a real app, this would handle the IBC transfer
     toast({
-      title: "Wallet Connected",
-      description: "Your wallet has been successfully connected",
+      title: "IBC Transfer Initiated",
+      description: `Transferring ${values.amount} ${values.sourceToken} from ${values.sourceChain} to ${values.destinationChain}.`,
     });
+    
+    console.log("Transfer values:", values);
+  };
+
+  const openWalletModal = () => {
+    setIsWalletModalOpen(true);
+  };
+
+  const closeWalletModal = () => {
+    setIsWalletModalOpen(false);
   };
 
   const findTokenById = (id: string) => {
     return cosmosTokens.find(token => token.id === id);
+  };
+
+  const handleWalletConnect = (walletId: string) => {
+    closeWalletModal();
   };
 
   return (
@@ -118,27 +173,25 @@ const StakePage = () => {
             <p className="text-muted-foreground">Stake Cosmos ecosystem tokens across multiple chains</p>
           </div>
           
-          {!isWalletConnected && (
-            <Button onClick={connectWallet} className="cosmic-button">
+          {!wallet ? (
+            <Button onClick={openWalletModal} className="cosmic-button">
               <Wallet className="mr-2 h-4 w-4" />
               Connect Wallet
             </Button>
-          )}
-          
-          {isWalletConnected && (
+          ) : (
             <div className="flex items-center bg-muted/30 px-4 py-2 rounded-lg border border-white/5">
               <div className="mr-3 p-2 rounded-full bg-white/10">
                 <Wallet className="h-5 w-5" />
               </div>
               <div>
-                <div className="text-sm font-medium">cosmos1abcd...wxyz</div>
-                <div className="text-xs text-muted-foreground">Cosmos Hub</div>
+                <div className="text-sm font-medium">{wallet.address.substring(0, 8)}...{wallet.address.substring(wallet.address.length - 4)}</div>
+                <div className="text-xs text-muted-foreground">{wallet.chainId}</div>
               </div>
             </div>
           )}
         </div>
         
-        <Tabs defaultValue="stake" className="w-full">
+        <Tabs defaultValue="stake" className="w-full" onValueChange={setActiveTab}>
           <TabsList className="grid grid-cols-3 mb-6 bg-muted/30">
             <TabsTrigger value="stake">Stake</TabsTrigger>
             <TabsTrigger value="ibc-transfer">IBC Transfer</TabsTrigger>
@@ -154,11 +207,28 @@ const StakePage = () => {
                   </CardHeader>
                   
                   <CardContent>
-                    <Form {...form}>
-                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    {!wallet && (
+                      <Alert className="mb-6 bg-primary/10 border-primary/30">
+                        <Wallet className="h-4 w-4" />
+                        <AlertTitle>Wallet connection required</AlertTitle>
+                        <AlertDescription>
+                          Please connect your Keplr wallet to start staking IBC tokens.
+                          <Button 
+                            onClick={openWalletModal} 
+                            variant="link" 
+                            className="text-primary p-0 h-auto ml-2"
+                          >
+                            Connect now
+                          </Button>
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    
+                    <Form {...stakeForm}>
+                      <form onSubmit={stakeForm.handleSubmit(onSubmitStake)} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <FormField
-                            control={form.control}
+                            control={stakeForm.control}
                             name="token"
                             render={({ field }) => (
                               <FormItem>
@@ -166,6 +236,7 @@ const StakePage = () => {
                                 <Select 
                                   onValueChange={field.onChange} 
                                   defaultValue={field.value}
+                                  disabled={!wallet}
                                 >
                                   <FormControl>
                                     <SelectTrigger className="bg-muted/30 border-white/5">
@@ -192,7 +263,7 @@ const StakePage = () => {
                           />
                           
                           <FormField
-                            control={form.control}
+                            control={stakeForm.control}
                             name="amount"
                             render={({ field }) => (
                               <FormItem>
@@ -204,6 +275,7 @@ const StakePage = () => {
                                       type="number"
                                       placeholder="0.00"
                                       className="pr-16 bg-muted/30 border-white/5"
+                                      disabled={!wallet}
                                     />
                                   </FormControl>
                                   <Button 
@@ -211,13 +283,14 @@ const StakePage = () => {
                                     variant="ghost" 
                                     size="sm" 
                                     className="absolute right-0 top-0 h-full px-3"
-                                    onClick={() => form.setValue("amount", "100")} // Example max amount
+                                    onClick={() => stakeForm.setValue("amount", "100")}
+                                    disabled={!wallet}
                                   >
                                     MAX
                                   </Button>
                                 </div>
                                 <FormDescription>
-                                  Available: 100 {form.watch("token") && findTokenById(form.watch("token"))?.name}
+                                  Available: {wallet ? '100' : '0'} {stakeForm.watch("token") && findTokenById(stakeForm.watch("token"))?.name}
                                 </FormDescription>
                               </FormItem>
                             )}
@@ -225,7 +298,7 @@ const StakePage = () => {
                         </div>
                         
                         <FormField
-                          control={form.control}
+                          control={stakeForm.control}
                           name="destination"
                           render={({ field }) => (
                             <FormItem>
@@ -233,6 +306,7 @@ const StakePage = () => {
                               <Select 
                                 onValueChange={field.onChange} 
                                 defaultValue={field.value}
+                                disabled={!wallet}
                               >
                                 <FormControl>
                                   <SelectTrigger className="bg-muted/30 border-white/5">
@@ -259,7 +333,7 @@ const StakePage = () => {
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <FormField
-                            control={form.control}
+                            control={stakeForm.control}
                             name="stakingPeriod"
                             render={({ field }) => (
                               <FormItem>
@@ -267,6 +341,7 @@ const StakePage = () => {
                                 <Select 
                                   onValueChange={field.onChange} 
                                   defaultValue={field.value}
+                                  disabled={!wallet}
                                 >
                                   <FormControl>
                                     <SelectTrigger className="bg-muted/30 border-white/5">
@@ -290,7 +365,7 @@ const StakePage = () => {
                           />
                           
                           <FormField
-                            control={form.control}
+                            control={stakeForm.control}
                             name="isAutoCompound"
                             render={({ field }) => (
                               <FormItem className="flex flex-row items-end space-x-3 space-y-0 rounded-md border border-white/5 bg-muted/30 p-4">
@@ -300,6 +375,7 @@ const StakePage = () => {
                                     checked={field.value}
                                     onChange={field.onChange}
                                     className="accent-primary h-4 w-4"
+                                    disabled={!wallet}
                                   />
                                 </FormControl>
                                 <div className="space-y-1 leading-none">
@@ -313,9 +389,27 @@ const StakePage = () => {
                           />
                         </div>
                         
-                        <Button type="submit" className="cosmic-button w-full py-6">
-                          <Coins className="mr-2 h-4 w-4" />
-                          Stake Now
+                        <Button 
+                          type="submit" 
+                          className={`w-full py-6 ${wallet ? 'cosmic-button' : 'bg-muted/50 text-muted-foreground hover:bg-muted/50 cursor-not-allowed'}`}
+                          onClick={(e) => {
+                            if (!wallet) {
+                              e.preventDefault();
+                              openWalletModal();
+                            }
+                          }}
+                        >
+                          {wallet ? (
+                            <>
+                              <Coins className="mr-2 h-4 w-4" />
+                              Stake Now
+                            </>
+                          ) : (
+                            <>
+                              <Wallet className="mr-2 h-4 w-4" />
+                              Connect Wallet to Stake
+                            </>
+                          )}
                         </Button>
                       </form>
                     </Form>
@@ -330,12 +424,12 @@ const StakePage = () => {
                   </CardHeader>
                   
                   <CardContent className="space-y-6">
-                    {form.watch("token") && (
+                    {stakeForm.watch("token") && (
                       <div className="space-y-4">
                         <div className="flex items-center justify-between p-3 rounded-lg border border-white/5 bg-background/30">
                           <div className="text-sm">Selected Token</div>
                           <div className="font-medium flex items-center">
-                            {findTokenById(form.watch("token"))?.icon} {findTokenById(form.watch("token"))?.name}
+                            {findTokenById(stakeForm.watch("token"))?.icon} {findTokenById(stakeForm.watch("token"))?.name}
                           </div>
                         </div>
                         
@@ -344,17 +438,17 @@ const StakePage = () => {
                             <BadgePercent className="h-3 w-3 mr-1" /> APY
                           </div>
                           <div className="font-medium text-green-400">
-                            {findTokenById(form.watch("token"))?.apy}
+                            {findTokenById(stakeForm.watch("token"))?.apy}
                           </div>
                         </div>
                         
-                        {form.watch("stakingPeriod") && (
+                        {stakeForm.watch("stakingPeriod") && (
                           <div className="flex items-center justify-between p-3 rounded-lg border border-white/5 bg-background/30">
                             <div className="text-sm flex items-center">
                               <Timer className="h-3 w-3 mr-1" /> Lock Period
                             </div>
                             <div className="font-medium">
-                              {form.watch("stakingPeriod") === "0" ? "No lock" : `${form.watch("stakingPeriod")} days`}
+                              {stakeForm.watch("stakingPeriod") === "0" ? "No lock" : `${stakeForm.watch("stakingPeriod")} days`}
                             </div>
                           </div>
                         )}
@@ -364,16 +458,16 @@ const StakePage = () => {
                             <ArrowUpRight className="h-3 w-3 mr-1" /> Auto-Compound
                           </div>
                           <div className="font-medium">
-                            {form.watch("isAutoCompound") ? "Enabled" : "Disabled"}
+                            {stakeForm.watch("isAutoCompound") ? "Enabled" : "Disabled"}
                           </div>
                         </div>
                         
-                        {form.watch("amount") && form.watch("token") && (
+                        {stakeForm.watch("amount") && stakeForm.watch("token") && (
                           <div className="p-3 rounded-lg border border-white/5 bg-background/30">
                             <div className="text-sm mb-1">Estimated Rewards (30 days)</div>
                             <div className="font-medium text-green-400 text-xl">
-                              {(parseFloat(form.watch("amount") || "0") * 
-                                parseFloat(findTokenById(form.watch("token"))?.apy.replace("%", "") || "0") / 100 / 12).toFixed(6)} {findTokenById(form.watch("token"))?.name}
+                              {(parseFloat(stakeForm.watch("amount") || "0") * 
+                                parseFloat(findTokenById(stakeForm.watch("token"))?.apy.replace("%", "") || "0") / 100 / 12).toFixed(6)} {findTokenById(stakeForm.watch("token"))?.name}
                             </div>
                           </div>
                         )}
@@ -421,20 +515,314 @@ const StakePage = () => {
           </TabsContent>
           
           <TabsContent value="ibc-transfer" className="space-y-6">
-            <Card className="glass-card">
-              <CardHeader>
-                <CardTitle>IBC Token Transfer</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-center p-12">
-                  <div className="text-center space-y-2">
-                    <div className="text-5xl mb-4">🚀</div>
-                    <h3 className="text-xl font-medium">IBC Transfer Coming Soon</h3>
-                    <p className="text-muted-foreground">Direct token transfers between IBC-enabled chains</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <Card className="glass-card">
+                  <CardHeader>
+                    <CardTitle className="text-xl">IBC Token Transfer</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {!wallet && (
+                      <Alert className="mb-6 bg-primary/10 border-primary/30">
+                        <Wallet className="h-4 w-4" />
+                        <AlertTitle>Wallet connection required</AlertTitle>
+                        <AlertDescription>
+                          Please connect your Keplr wallet to transfer IBC tokens.
+                          <Button 
+                            onClick={openWalletModal} 
+                            variant="link" 
+                            className="text-primary p-0 h-auto ml-2"
+                          >
+                            Connect now
+                          </Button>
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    
+                    <Form {...transferForm}>
+                      <form onSubmit={transferForm.handleSubmit(onSubmitTransfer)} className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <FormField
+                            control={transferForm.control}
+                            name="sourceChain"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Source Chain</FormLabel>
+                                <Select 
+                                  onValueChange={field.onChange} 
+                                  defaultValue={field.value}
+                                  disabled={!wallet}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger className="bg-muted/30 border-white/5">
+                                      <SelectValue placeholder="Select source chain" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent className="bg-card border-white/10">
+                                    {destinationChains
+                                      .filter(chain => ['cosmos', 'osmosis', 'juno', 'evmos', 'kava', 'secret', 'akash'].includes(chain.id))
+                                      .map((chain) => (
+                                        <SelectItem key={chain.id} value={chain.id}>
+                                          <div className="flex items-center">
+                                            <span className="mr-2">{chain.icon}</span>
+                                            <span>{chain.name}</span>
+                                          </div>
+                                        </SelectItem>
+                                      ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormDescription>
+                                  Select the source chain
+                                </FormDescription>
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={transferForm.control}
+                            name="sourceToken"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Token</FormLabel>
+                                <Select 
+                                  onValueChange={field.onChange} 
+                                  defaultValue={field.value}
+                                  disabled={!wallet || !transferForm.watch("sourceChain")}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger className="bg-muted/30 border-white/5">
+                                      <SelectValue placeholder="Select token" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent className="bg-card border-white/10">
+                                    {cosmosTokens
+                                      .filter(token => token.network.toLowerCase().includes(transferForm.watch("sourceChain")))
+                                      .map((token) => (
+                                        <SelectItem key={token.id} value={token.id}>
+                                          <div className="flex items-center">
+                                            <span className="mr-2">{token.icon}</span>
+                                            <span>{token.name}</span>
+                                          </div>
+                                        </SelectItem>
+                                      ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormDescription>
+                                  Select the token to transfer
+                                </FormDescription>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        <div className="flex items-center justify-center">
+                          <div className="w-10 h-10 rounded-full bg-muted/30 flex items-center justify-center">
+                            <ArrowRightLeft className="h-5 w-5" />
+                          </div>
+                        </div>
+                        
+                        <FormField
+                          control={transferForm.control}
+                          name="destinationChain"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Destination Chain</FormLabel>
+                              <Select 
+                                onValueChange={field.onChange} 
+                                defaultValue={field.value}
+                                disabled={!wallet}
+                              >
+                                <FormControl>
+                                  <SelectTrigger className="bg-muted/30 border-white/5">
+                                    <SelectValue placeholder="Select destination chain" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent className="bg-card border-white/10">
+                                  {destinationChains
+                                    .filter(chain => chain.id !== transferForm.watch("sourceChain"))
+                                    .map((chain) => (
+                                      <SelectItem key={chain.id} value={chain.id}>
+                                        <div className="flex items-center">
+                                          <span className="mr-2">{chain.icon}</span>
+                                          <span>{chain.name}</span>
+                                        </div>
+                                      </SelectItem>
+                                    ))}
+                                </SelectContent>
+                              </Select>
+                              <FormDescription>
+                                Select the destination chain
+                              </FormDescription>
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={transferForm.control}
+                          name="amount"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Amount</FormLabel>
+                              <div className="relative">
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    type="number"
+                                    placeholder="0.00"
+                                    className="pr-16 bg-muted/30 border-white/5"
+                                    disabled={!wallet}
+                                  />
+                                </FormControl>
+                                <Button 
+                                  type="button"
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="absolute right-0 top-0 h-full px-3"
+                                  onClick={() => transferForm.setValue("amount", "100")}
+                                  disabled={!wallet}
+                                >
+                                  MAX
+                                </Button>
+                              </div>
+                              <FormDescription>
+                                Available: {wallet ? '100' : '0'} {transferForm.watch("sourceToken") && findTokenById(transferForm.watch("sourceToken"))?.name}
+                              </FormDescription>
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={transferForm.control}
+                          name="recipientAddress"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Recipient Address</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  placeholder="cosmos1..."
+                                  className="bg-muted/30 border-white/5"
+                                  disabled={!wallet}
+                                />
+                              </FormControl>
+                              <FormDescription>
+                                Enter the recipient's address on the destination chain
+                              </FormDescription>
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <Button 
+                          type="submit" 
+                          className={`w-full py-6 ${wallet ? 'cosmic-button' : 'bg-muted/50 text-muted-foreground hover:bg-muted/50 cursor-not-allowed'}`}
+                          onClick={(e) => {
+                            if (!wallet) {
+                              e.preventDefault();
+                              openWalletModal();
+                            }
+                          }}
+                        >
+                          {wallet ? (
+                            <>
+                              <ArrowRightLeft className="mr-2 h-4 w-4" />
+                              Transfer Tokens
+                            </>
+                          ) : (
+                            <>
+                              <Wallet className="mr-2 h-4 w-4" />
+                              Connect Wallet to Transfer
+                            </>
+                          )}
+                        </Button>
+                      </form>
+                    </Form>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <div>
+                <Card className="glass-card h-full">
+                  <CardHeader>
+                    <CardTitle className="text-xl">Transfer Info</CardTitle>
+                  </CardHeader>
+                  
+                  <CardContent className="space-y-6">
+                    {transferForm.watch("sourceToken") && transferForm.watch("destinationChain") && (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between p-3 rounded-lg border border-white/5 bg-background/30">
+                          <div className="text-sm">Selected Token</div>
+                          <div className="font-medium flex items-center">
+                            {findTokenById(transferForm.watch("sourceToken"))?.icon} {findTokenById(transferForm.watch("sourceToken"))?.name}
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between p-3 rounded-lg border border-white/5 bg-background/30">
+                          <div className="text-sm">Route</div>
+                          <div className="font-medium">
+                            {destinationChains.find(c => c.id === transferForm.watch("sourceChain"))?.name} → {destinationChains.find(c => c.id === transferForm.watch("destinationChain"))?.name}
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between p-3 rounded-lg border border-white/5 bg-background/30">
+                          <div className="text-sm">Estimated Fee</div>
+                          <div className="font-medium">
+                            {transferForm.watch("sourceToken") && findTokenById(transferForm.watch("sourceToken")) ? `0.001 ${findTokenById(transferForm.watch("sourceToken"))?.name}` : '0.001 TOKEN'}
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between p-3 rounded-lg border border-white/5 bg-background/30">
+                          <div className="text-sm">Estimated Time</div>
+                          <div className="font-medium">~30 seconds</div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <Alert variant="default" className="bg-card/60 border-yellow-500/30">
+                      <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                      <AlertTitle>Transfer Only To Supported Chains</AlertTitle>
+                      <AlertDescription className="text-xs text-muted-foreground">
+                        Only transfer tokens to chains that support the IBC protocol. Make sure the recipient address is valid on the destination chain.
+                      </AlertDescription>
+                    </Alert>
+                    
+                    <div className="space-y-2">
+                      <h3 className="text-sm font-medium">IBC Transfer Features</h3>
+                      
+                      <div className="flex items-start space-x-2 text-xs">
+                        <ShieldCheck className="h-4 w-4 mt-0.5 text-green-400" />
+                        <div>
+                          <p className="font-medium">Secure Protocol</p>
+                          <p className="text-muted-foreground">Transfers secured by IBC protocol</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start space-x-2 text-xs">
+                        <Timer className="h-4 w-4 mt-0.5 text-green-400" />
+                        <div>
+                          <p className="font-medium">Fast Transfers</p>
+                          <p className="text-muted-foreground">Complete in seconds, not minutes</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start space-x-2 text-xs">
+                        <Coins className="h-4 w-4 mt-0.5 text-green-400" />
+                        <div>
+                          <p className="font-medium">Low Fees</p>
+                          <p className="text-muted-foreground">Minimal fees for token transfers</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="text-xs text-muted-foreground border-t border-white/5 pt-4">
+                      <p className="flex items-center">
+                        <Info className="h-3 w-3 mr-1" />
+                        Learn more about <a href="#" className="underline ml-1 flex items-center">IBC Transfers <ExternalLink className="h-3 w-3 ml-1" /></a>
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </TabsContent>
           
           <TabsContent value="cross-chain" className="space-y-6">
@@ -443,13 +831,32 @@ const StakePage = () => {
                 <CardTitle>Cross-Chain Staking</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-center p-12">
-                  <div className="text-center space-y-2">
-                    <div className="text-5xl mb-4">⚡</div>
-                    <h3 className="text-xl font-medium">Cross-Chain Staking Coming Soon</h3>
-                    <p className="text-muted-foreground">Stake assets across multiple chains for enhanced returns</p>
+                {!wallet ? (
+                  <div className="flex flex-col items-center justify-center p-8 space-y-4">
+                    <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mb-4">
+                      <Wallet className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-xl font-medium">Connect Wallet to Continue</h3>
+                    <p className="text-muted-foreground text-center max-w-md">
+                      Please connect your Keplr wallet to access Cross-Chain Staking features.
+                    </p>
+                    <Button 
+                      onClick={openWalletModal} 
+                      className="cosmic-button mt-4"
+                    >
+                      <Wallet className="mr-2 h-4 w-4" />
+                      Connect Wallet
+                    </Button>
                   </div>
-                </div>
+                ) : (
+                  <div className="flex items-center justify-center p-12">
+                    <div className="text-center space-y-2">
+                      <div className="text-5xl mb-4">⚡</div>
+                      <h3 className="text-xl font-medium">Cross-Chain Staking Coming Soon</h3>
+                      <p className="text-muted-foreground">Stake assets across multiple chains for enhanced returns</p>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -499,6 +906,12 @@ const StakePage = () => {
           </Card>
         </div>
       </div>
+      
+      <WalletConnectModal
+        isOpen={isWalletModalOpen}
+        onClose={closeWalletModal}
+        onConnect={handleWalletConnect}
+      />
     </div>
   );
 };

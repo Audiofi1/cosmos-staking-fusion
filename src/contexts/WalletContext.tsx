@@ -15,6 +15,7 @@ interface WalletContextType {
   isConnecting: boolean;
   connectKeplr: () => Promise<boolean>;
   disconnectWallet: () => void;
+  getOfflineSigner: (chainId?: string) => any;
 }
 
 const WalletContext = createContext<WalletContextType>({
@@ -22,6 +23,7 @@ const WalletContext = createContext<WalletContextType>({
   isConnecting: false,
   connectKeplr: async () => false,
   disconnectWallet: () => {},
+  getOfflineSigner: () => null,
 });
 
 export const useWallet = () => useContext(WalletContext);
@@ -68,6 +70,18 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
         setWallet(null);
         localStorage.removeItem('omniaWallet');
       }
+    }
+  };
+
+  // Get offline signer for transaction signing
+  const getOfflineSigner = (chainId?: string) => {
+    if (!window.keplr || !wallet) return null;
+    
+    try {
+      return window.keplr.getOfflineSigner(chainId || wallet.chainId);
+    } catch (error) {
+      console.error('Failed to get offline signer', error);
+      return null;
     }
   };
 
@@ -139,7 +153,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   };
 
   return (
-    <WalletContext.Provider value={{ wallet, isConnecting, connectKeplr, disconnectWallet }}>
+    <WalletContext.Provider value={{ wallet, isConnecting, connectKeplr, disconnectWallet, getOfflineSigner }}>
       {children}
     </WalletContext.Provider>
   );
