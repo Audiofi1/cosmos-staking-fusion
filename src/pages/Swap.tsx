@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { ArrowDownUp } from "lucide-react";
@@ -59,7 +60,7 @@ const Swap: React.FC = () => {
 
     toast({
       title: "Swap initiated",
-      description: `Swapping ${amount} ${fromToken} for ${output.toFixed(2)} ${toToken}.`,
+      description: `Swapping ${amount} ${fromToken} for ${output.toFixed(2)} ${toToken} using ${wallet.walletType}.`,
     });
   };
 
@@ -82,6 +83,8 @@ const Swap: React.FC = () => {
                 <option>Cosmos</option>
                 <option>Ethereum</option>
                 <option>Binance Coin</option>
+                <option>Osmosis</option>
+                <option>Juno</option>
               </select>
               <input
                 type="number"
@@ -91,6 +94,11 @@ const Swap: React.FC = () => {
                 onChange={(e) => setAmount(e.target.value)}
               />
             </div>
+            {wallet && (
+              <div className="text-xs text-right mt-1 text-muted-foreground">
+                Connected with {wallet.walletType}
+              </div>
+            )}
           </div>
 
           <div className="flex justify-center mb-4">
@@ -108,6 +116,8 @@ const Swap: React.FC = () => {
                 <option>Ethereum</option>
                 <option>Cosmos</option>
                 <option>Binance Coin</option>
+                <option>Osmosis</option>
+                <option>Juno</option>
               </select>
               <input
                 type="text"
@@ -119,9 +129,18 @@ const Swap: React.FC = () => {
             </div>
           </div>
 
-          <Button className="w-full cosmic-button" onClick={handleSwap}>
-            Swap Tokens
+          <Button 
+            className="w-full cosmic-button" 
+            onClick={handleSwap}
+          >
+            {wallet ? "Swap Tokens" : "Connect Wallet to Swap"}
           </Button>
+          
+          {!wallet && (
+            <p className="text-center text-sm text-muted-foreground mt-3">
+              You need to connect your wallet first
+            </p>
+          )}
         </div>
       </main>
       
