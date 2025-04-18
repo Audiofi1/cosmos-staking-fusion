@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,11 +8,11 @@ import { useWallet } from "@/contexts/WalletContext";
 const PortfolioOverview = () => {
   const { wallet } = useWallet();
 
-  // Dynamic portfolio data based on wallet connection
+  // Completely empty state for a new live account
   const portfolioData = wallet 
     ? {
-        totalValue: "0.00", // Initially 0 for a new wallet
-        totalValueStaked: "0.00",
+        totalValue: "$0.00", 
+        totalValueStaked: "$0.00",
         networks: [],
         assets: [],
         averageApr: "0%",
@@ -73,7 +72,12 @@ const PortfolioOverview = () => {
               </span>
             </div>
             
-            {!wallet ? (
+            {wallet ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>No assets staked yet</p>
+                <p className="text-sm mt-2">Start staking to see your portfolio grow</p>
+              </div>
+            ) : (
               <div className="space-y-4">
                 {portfolioData.networks.map((network, index) => (
                   <div key={index} className="flex justify-between items-center">
@@ -101,11 +105,6 @@ const PortfolioOverview = () => {
                     className="h-1.5 bg-muted" 
                   />
                 ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>No assets staked yet</p>
-                <p className="text-sm mt-2">Connect your wallet to start staking</p>
               </div>
             )}
             
@@ -135,7 +134,12 @@ const PortfolioOverview = () => {
           </TabsContent>
           
           <TabsContent value="assets">
-            {!wallet ? (
+            {wallet ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>No assets found</p>
+                <p className="text-sm mt-2">Start staking to see your assets</p>
+              </div>
+            ) : (
               <div className="space-y-2">
                 {[
                   { icon: "⚛️", name: "ATOM", network: "Cosmos", amount: "124.5", value: "$1,869.38", apy: "14.2%" },
@@ -160,16 +164,16 @@ const PortfolioOverview = () => {
                   </div>
                 ))}
               </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>No assets found</p>
-                <p className="text-sm mt-2">Start staking to see your assets</p>
-              </div>
             )}
           </TabsContent>
           
           <TabsContent value="history">
-            {!wallet ? (
+            {wallet ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>No transaction history</p>
+                <p className="text-sm mt-2">Your transactions will appear here</p>
+              </div>
+            ) : (
               <div className="space-y-2">
                 {[
                   { action: "Staked", asset: "ATOM", amount: "25", value: "$375.25", time: "2h ago" },
@@ -188,11 +192,6 @@ const PortfolioOverview = () => {
                     </div>
                   </div>
                 ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>No transaction history</p>
-                <p className="text-sm mt-2">Your transactions will appear here</p>
               </div>
             )}
           </TabsContent>
