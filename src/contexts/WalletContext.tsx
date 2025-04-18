@@ -17,6 +17,7 @@ interface WalletContextType {
   connectLeap: () => Promise<boolean>;
   disconnectWallet: () => void;
   getOfflineSigner: (chainId?: string) => any;
+  openWalletModal: () => void;
 }
 
 const WalletContext = createContext<WalletContextType>({
@@ -26,6 +27,7 @@ const WalletContext = createContext<WalletContextType>({
   connectLeap: async () => false,
   disconnectWallet: () => {},
   getOfflineSigner: () => null,
+  openWalletModal: () => {},
 });
 
 export const useWallet = () => useContext(WalletContext);
@@ -37,6 +39,7 @@ interface WalletProviderProps {
 export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   const [wallet, setWallet] = useState<WalletInfo | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
   const { toast } = useToast();
 
   // Check for existing connection on startup
@@ -58,6 +61,14 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       }
     }
   }, []);
+
+  const openWalletModal = () => {
+    setIsWalletModalOpen(true);
+  };
+
+  const closeWalletModal = () => {
+    setIsWalletModalOpen(false);
+  };
 
   // Verify Keplr connection is still valid
   const verifyKeplrConnection = async (walletInfo: WalletInfo) => {
@@ -241,8 +252,17 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   };
 
   return (
-    <WalletContext.Provider value={{ wallet, isConnecting, connectKeplr, connectLeap, disconnectWallet, getOfflineSigner }}>
+    <WalletContext.Provider value={{ 
+      wallet, 
+      isConnecting, 
+      connectKeplr, 
+      connectLeap, 
+      disconnectWallet, 
+      getOfflineSigner,
+      openWalletModal 
+    }}>
       {children}
+      {/* Optional: Include WalletConnectModal here for global access */}
     </WalletContext.Provider>
   );
 };

@@ -3,8 +3,9 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, TooltipProps } from 'recharts';
-import { Wallet, TrendingUp, ArrowRight, BadgePercent } from "lucide-react";
+import { Wallet, TrendingUp, ArrowRight, BadgePercent, RefreshCw } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { useWallet } from "@/contexts/WalletContext";
 
 interface RewardDataPoint {
   date: string;
@@ -33,9 +34,9 @@ interface RewardDistribution {
 
 const rewardDistribution: RewardDistribution[] = [
   { network: 'Cosmos', icon: '⚛️', color: 'cosmos', amount: '0.45', percentage: 42 },
-  { network: 'Ethereum', icon: 'Ξ', color: 'ethereum', amount: '0.28', percentage: 26 },
-  { network: 'Osmosis', icon: '🌌', color: 'cosmos', amount: '0.21', percentage: 20 },
-  { network: 'BNB Chain', icon: '₿', color: 'bnb', amount: '0.13', percentage: 12 },
+  { network: 'Osmosis', icon: '🌌', color: 'cosmos', amount: '0.28', percentage: 26 },
+  { network: 'Juno', icon: '🪐', color: 'cosmos', amount: '0.21', percentage: 20 },
+  { network: 'Akash', icon: '☁️', color: 'akash', amount: '0.13', percentage: 12 },
 ];
 
 const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
@@ -43,7 +44,7 @@ const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
     return (
       <div className="glass-card p-2 text-xs border border-white/10">
         <p className="text-muted-foreground">{payload[0].payload.date}</p>
-        <p className="font-medium text-green-400">{`${payload[0].value} ETH`}</p>
+        <p className="font-medium text-green-400">{`${payload[0].value} ATOM`}</p>
       </div>
     );
   }
@@ -53,8 +54,17 @@ const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
 
 const RewardsTracker = () => {
   const { toast } = useToast();
+  const { wallet, openWalletModal } = useWallet();
+  const [isClaimingRewards, setIsClaimingRewards] = React.useState(false);
 
   const handleClaimRewards = () => {
+    if (!wallet) {
+      openWalletModal();
+      return;
+    }
+    
+    setIsClaimingRewards(true);
+    
     toast({
       title: "Claim initiated",
       description: "Your rewards claim is being processed. This may take a few moments.",
@@ -62,9 +72,10 @@ const RewardsTracker = () => {
     
     // Simulate successful claim after 2 seconds
     setTimeout(() => {
+      setIsClaimingRewards(false);
       toast({
         title: "Rewards claimed!",
-        description: "You have successfully claimed 1.07 ETH in rewards.",
+        description: "You have successfully claimed 1.07 ATOM in rewards.",
       });
     }, 2000);
   };
@@ -78,15 +89,25 @@ const RewardsTracker = () => {
         <Button 
           className="cosmic-button px-4 py-1.5 text-white"
           onClick={handleClaimRewards}
+          disabled={isClaimingRewards}
         >
-          <Wallet className="h-4 w-4 mr-1.5" />
-          Claim All
+          {isClaimingRewards ? (
+            <>
+              <RefreshCw className="h-4 w-4 mr-1.5 animate-spin" />
+              Claiming...
+            </>
+          ) : (
+            <>
+              {!wallet ? <Wallet className="h-4 w-4 mr-1.5" /> : null}
+              {wallet ? "Claim All" : "Connect Wallet to Claim"}
+            </>
+          )}
         </Button>
       </CardHeader>
       <CardContent>
         <div className="mb-6">
           <div className="text-3xl font-bold flex items-baseline">
-            {totalRewards} ETH
+            {totalRewards} ATOM
             <span className="text-green-400 text-sm ml-2 flex items-center">
               <TrendingUp className="h-4 w-4 mr-0.5" /> +24.3%
             </span>
@@ -147,7 +168,7 @@ const RewardsTracker = () => {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="font-medium">{item.amount} ETH</div>
+                  <div className="font-medium">{item.amount} ATOM</div>
                   <div className="text-xs text-muted-foreground">{item.percentage}% of total</div>
                 </div>
               </div>
