@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -47,30 +46,55 @@ const poolsData: Record<string, Pool> = {
     lockPeriod: "14 days",
     lockDays: 14
   },
-  "eth-1": {
-    id: "eth-1",
-    name: "ETH",
-    icon: "Ξ",
-    network: "Ethereum",
-    networkColor: "ethereum",
-    apy: "5.8%",
-    apyValue: 5.8,
+  "juno-1": {
+    id: "juno-1",
+    name: "JUNO",
+    icon: "🪐",
+    network: "Juno",
+    networkColor: "cosmos",
+    apy: "18.7%",
+    apyValue: 18.7,
     autoCompound: true,
-    lockPeriod: "No lock",
-    lockDays: 0
-  },
-  "bnb-1": {
-    id: "bnb-1",
-    name: "BNB",
-    icon: "₿",
-    network: "BNB Chain",
-    networkColor: "bnb",
-    apy: "9.3%",
-    apyValue: 9.3,
-    autoCompound: true,
-    lockPeriod: "7 days",
-    lockDays: 7
+    lockPeriod: "28 days",
+    lockDays: 28
   }
+};
+
+interface SmartContractConfig {
+  contractAddress: string;
+  abi: any; // Will be provided by smart contract developers
+  stakingMethod: string;
+  unstakingMethod: string;
+  rewardClaimMethod: string;
+}
+
+interface BackendConfig {
+  apiEndpoint: string;
+  stakeEndpoint: string;
+  unstakeEndpoint: string;
+  rewardsEndpoint: string;
+}
+
+const useSmartContract = (config: SmartContractConfig) => {
+  return {
+    stake: async (amount: string) => {
+    },
+    unstake: async (amount: string) => {
+    },
+    claimRewards: async () => {
+    }
+  };
+};
+
+const useBackendIntegration = (config: BackendConfig) => {
+  return {
+    stake: async (amount: string) => {
+    },
+    unstake: async (amount: string) => {
+    },
+    getRewards: async () => {
+    }
+  };
 };
 
 interface StakingModalProps {

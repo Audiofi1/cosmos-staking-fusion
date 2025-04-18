@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,8 +35,25 @@ const rewardDistribution: RewardDistribution[] = [
   { network: 'Cosmos', icon: '⚛️', color: 'cosmos', amount: '0.45', percentage: 42 },
   { network: 'Osmosis', icon: '🌌', color: 'cosmos', amount: '0.28', percentage: 26 },
   { network: 'Juno', icon: '🪐', color: 'cosmos', amount: '0.21', percentage: 20 },
-  { network: 'Akash', icon: '☁️', color: 'akash', amount: '0.13', percentage: 12 },
+  { network: 'Secret', icon: '🔒', color: 'cosmos', amount: '0.13', percentage: 12 }
 ];
+
+interface IRewardsContract {
+  claimRewards: () => Promise<void>;
+  getRewardsBalance: () => Promise<string>;
+}
+
+const useRewardsContract = (): IRewardsContract => {
+  return {
+    claimRewards: async () => {
+      // Implementation by smart contract developers
+    },
+    getRewardsBalance: async () => {
+      // Implementation by smart contract developers
+      return "0";
+    }
+  };
+};
 
 const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
   if (active && payload && payload.length) {

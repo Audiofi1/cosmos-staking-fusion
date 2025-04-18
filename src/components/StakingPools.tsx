@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -72,30 +71,6 @@ const pools: Pool[] = [
     apy: "18.7%",
     autoCompound: true,
     lockPeriod: "28 days",
-    available: true
-  },
-  {
-    id: "eth-1",
-    name: "ETH",
-    icon: "Ξ",
-    network: "Ethereum",
-    networkColor: "ethereum",
-    tvl: "$24.5M",
-    apy: "5.8%",
-    autoCompound: true,
-    lockPeriod: "No lock",
-    available: true
-  },
-  {
-    id: "bnb-1",
-    name: "BNB",
-    icon: "₿",
-    network: "BNB Chain",
-    networkColor: "bnb",
-    tvl: "$15.8M",
-    apy: "9.3%",
-    autoCompound: true,
-    lockPeriod: "7 days",
     available: true
   },
   {
@@ -200,11 +175,9 @@ const StakingPools = ({ openStakeModal }: { openStakeModal: (poolId: string) => 
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="all" className="w-full">
-          <TabsList className="grid grid-cols-4 mb-4 bg-muted/30">
+          <TabsList className="grid grid-cols-2 mb-4 bg-muted/30">
             <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="cosmos">Cosmos</TabsTrigger>
-            <TabsTrigger value="ethereum">Ethereum</TabsTrigger>
-            <TabsTrigger value="bnb">BNB Chain</TabsTrigger>
+            <TabsTrigger value="cosmos">Cosmos Ecosystem</TabsTrigger>
           </TabsList>
           
           <TabsContent value="all" className="space-y-3">
@@ -364,32 +337,6 @@ const StakingPools = ({ openStakeModal }: { openStakeModal: (poolId: string) => 
                       {/* Same expanded content as above */}
                     </div>
                   )}
-                </div>
-              ))}
-          </TabsContent>
-          
-          <TabsContent value="ethereum">
-            {filteredPools
-              .filter(pool => ["Ethereum"].includes(pool.network))
-              .map((pool) => (
-                <div 
-                  key={pool.id} 
-                  className="rounded-lg border border-white/5 bg-muted/30 overflow-hidden transition-all duration-300 mb-3"
-                >
-                  {/* Same pool content as above */}
-                </div>
-              ))}
-          </TabsContent>
-          
-          <TabsContent value="bnb">
-            {filteredPools
-              .filter(pool => ["BNB Chain"].includes(pool.network))
-              .map((pool) => (
-                <div 
-                  key={pool.id} 
-                  className="rounded-lg border border-white/5 bg-muted/30 overflow-hidden transition-all duration-300 mb-3"
-                >
-                  {/* Same pool content as above */}
                 </div>
               ))}
           </TabsContent>
