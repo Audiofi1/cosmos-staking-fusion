@@ -49,9 +49,9 @@ const PortfolioOverview = () => {
               
               <div className="flex justify-between items-center">
                 <div className="flex items-center">
-                  <div className="w-8 h-8 rounded-full network-ethereum mr-2 text-2xl flex items-center justify-center">Ξ</div>
+                  <div className="w-8 h-8 rounded-full network-osmosis mr-2 text-2xl flex items-center justify-center">🌌</div>
                   <div>
-                    <div className="font-medium">Ethereum</div>
+                    <div className="font-medium">Osmosis</div>
                     <div className="text-xs text-muted-foreground">3 assets staked</div>
                   </div>
                 </div>
@@ -61,21 +61,6 @@ const PortfolioOverview = () => {
                 </div>
               </div>
               <Progress value={35} className="h-1.5 bg-muted" />
-              
-              <div className="flex justify-between items-center">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 rounded-full network-bnb mr-2 text-2xl flex items-center justify-center">₿</div>
-                  <div>
-                    <div className="font-medium">BNB Chain</div>
-                    <div className="text-xs text-muted-foreground">2 assets staked</div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="font-medium">$2,411.44</div>
-                  <div className="text-xs text-green-400">+5.6%</div>
-                </div>
-              </div>
-              <Progress value={15} className="h-1.5 bg-muted" />
             </div>
             
             <div className="grid grid-cols-3 gap-3 pt-2">
@@ -97,7 +82,7 @@ const PortfolioOverview = () => {
                 <div className="flex items-center text-xs text-muted-foreground mb-1">
                   <ArrowRightLeft className="h-3 w-3 mr-1" /> Chains
                 </div>
-                <div className="font-medium text-lg">10+</div>
+                <div className="font-medium text-lg">2+</div>
                 <div className="text-xs text-muted-foreground">Connected</div>
               </div>
             </div>
@@ -107,18 +92,11 @@ const PortfolioOverview = () => {
             <div className="space-y-2">
               {[
                 { icon: "⚛️", name: "ATOM", network: "Cosmos", amount: "124.5", value: "$1,869.38", apy: "14.2%" },
-                { icon: "Ξ", name: "ETH", network: "Ethereum", amount: "1.38", value: "$3,254.12", apy: "5.8%" },
-                { icon: "₿", name: "BNB", network: "BNB Chain", amount: "8.76", value: "$2,364.58", apy: "9.3%" },
                 { icon: "🌌", name: "OSMO", network: "Osmosis", amount: "2,345", value: "$1,452.39", apy: "21.4%" },
-                { icon: "🌘", name: "LUNA", network: "Terra", amount: "521", value: "$856.44", apy: "11.7%" },
               ].map((asset, index) => (
                 <div key={index} className="p-3 rounded-lg border border-white/5 bg-muted/30 flex justify-between items-center">
                   <div className="flex items-center">
-                    <div className={`w-8 h-8 rounded-full mr-2 text-xl flex items-center justify-center ${
-                      asset.network === "Cosmos" ? "network-cosmos" : 
-                      asset.network === "Ethereum" ? "network-ethereum" : 
-                      "network-bnb"
-                    }`}>
+                    <div className={`w-8 h-8 rounded-full mr-2 text-xl flex items-center justify-center network-${asset.network === "Cosmos" ? "cosmos" : "osmosis"}`}>
                       {asset.icon}
                     </div>
                     <div>
@@ -141,10 +119,7 @@ const PortfolioOverview = () => {
             <div className="space-y-2">
               {[
                 { action: "Staked", asset: "ATOM", amount: "25", value: "$375.25", time: "2h ago" },
-                { action: "Reward", asset: "ETH", amount: "0.025", value: "$59.12", time: "5h ago" },
-                { action: "Auto-compound", asset: "OSMO", amount: "45.2", value: "$28.02", time: "1d ago" },
-                { action: "Staked", asset: "BNB", amount: "1.5", value: "$405.38", time: "2d ago" },
-                { action: "Unstaked", asset: "LUNA", amount: "120", value: "$198.24", time: "3d ago" },
+                { action: "Reward", asset: "OSMO", amount: "45.2", value: "$28.02", time: "1d ago" },
               ].map((event, index) => (
                 <div key={index} className="p-3 rounded-lg border border-white/5 bg-muted/30 flex justify-between items-center">
                   <div className="flex items-center">

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -37,30 +36,6 @@ const defaultNetworks: Network[] = [
     status: "active"
   },
   {
-    id: "ethereum",
-    name: "Ethereum",
-    icon: "Ξ",
-    color: "ethereum",
-    validators: 543256,
-    apr: "5.8%",
-    totalStaked: "$23.5B",
-    yourStake: "$1,845.12",
-    percentage: 72,
-    status: "active"
-  },
-  {
-    id: "bnb",
-    name: "BNB Chain",
-    icon: "₿",
-    color: "bnb",
-    validators: 21,
-    apr: "9.3%",
-    totalStaked: "$4.7B",
-    yourStake: "$875.38",
-    percentage: 54,
-    status: "active"
-  },
-  {
     id: "osmosis",
     name: "Osmosis",
     icon: "🌌",
@@ -77,8 +52,6 @@ const defaultNetworks: Network[] = [
 // Icons for network selection
 const networkIcons = [
   { icon: "⚛️", label: "Cosmos" },
-  { icon: "Ξ", label: "Ethereum" },
-  { icon: "₿", label: "Bitcoin" },
   { icon: "🌌", label: "Osmosis" },
   { icon: "🌟", label: "Star" },
   { icon: "🔗", label: "Chain" },
